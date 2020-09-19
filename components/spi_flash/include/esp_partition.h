@@ -255,7 +255,7 @@ esp_err_t esp_partition_write(const esp_partition_t* partition,
  *         or one of error codes from lower-level flash driver.
  */
 esp_err_t esp_partition_erase_range(const esp_partition_t* partition,
-                                    uint32_t start_addr, uint32_t size);
+                                    size_t start_addr, size_t size);
 
 #ifdef CONFIG_ENABLE_FLASH_MMAP
 /**

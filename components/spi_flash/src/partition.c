@@ -205,7 +205,10 @@ static esp_err_t load_partitions()
 #endif
 
         // it->label may not be zero-terminated
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsizeof-pointer-memaccess"
         strncpy(item->info.label, (const char*) it->label, sizeof(it->label));
+#pragma GCC diagnostic pop
         item->info.label[sizeof(it->label)] = 0;
         // add it to the list
         if (last == NULL) {
