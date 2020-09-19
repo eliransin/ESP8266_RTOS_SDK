@@ -2,7 +2,7 @@ set(COMPONENT_SRCDIRS "src" "port/esp8266")
 
 set(COMPONENT_ADD_INCLUDEDIRS "include" "port/esp8266/include")
 
-set(COMPONENT_REQUIRES "log" "newlib")
+set(COMPONENT_REQUIRES "log" "libgloss")
 
 register_component()
 

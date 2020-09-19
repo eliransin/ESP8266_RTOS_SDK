@@ -91,7 +91,7 @@ function(__build_set_default_build_specifications)
     unset(c_compile_options)
     unset(cxx_compile_options)
 
-    list(APPEND compile_definitions "-D_GNU_SOURCE")
+    list(APPEND compile_definitions "-D_GNU_SOURCE" "-DCONFIG_FREERTOS_ISR_STACKSIZE=${CONFIG_FREERTOS_ISR_STACKSIZE}")
 
     list(APPEND compile_options     "-ffunction-sections"
                                     "-fdata-sections"
@@ -154,7 +154,7 @@ function(__build_init idf_path)
     endforeach()
 
     # Set components required by all other components in the build
-    set(requires_common newlib freertos heap log lwip)
+    set(requires_common freertos libgloss heap log lwip)
     idf_build_set_property(__COMPONENT_REQUIRES_COMMON "${requires_common}")
 
     __build_get_idf_git_revision()

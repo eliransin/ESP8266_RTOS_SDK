@@ -3,7 +3,7 @@ idf_component_register(SRCS "pthread.c"
                             "pthread_cond_var.c"
                             "pthread_local_storage.c"
                     INCLUDE_DIRS include
-                    PRIV_REQUIRES newlib)
+                    PRIV_REQUIRES libgloss)
 
 if(GCC_NOT_5_2_0)
     set(extra_link_flags "-u pthread_include_pthread_impl")

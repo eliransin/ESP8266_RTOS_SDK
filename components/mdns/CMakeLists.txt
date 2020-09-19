@@ -13,6 +13,6 @@ set(COMPONENT_SRCS "${COMPONENT_SRCS}"
                    "mdns_console.c")
 endif()
 
-set(COMPONENT_REQUIRES "console" "tcpip_adapter" "newlib")
+set(COMPONENT_REQUIRES "console" "tcpip_adapter" "libgloss")
 
 register_component()
