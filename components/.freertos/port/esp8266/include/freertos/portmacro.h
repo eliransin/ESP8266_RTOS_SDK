@@ -45,7 +45,7 @@ extern "C" {
 #ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER
 #include "esp_newlib.h"
 
-//#define _impure_ptr _global_impure_ptr
+#define _impure_ptr _global_impure_ptr
 
 #undef _REENT_INIT_PTR
 #define _REENT_INIT_PTR(p) esp_reent_init(p)
@@ -114,7 +114,7 @@ extern void vTaskSwitchContext( void );				\
 void portYIELD_FROM_ISR(void);
 
 /*-----------------------------------------------------------*/
-extern uint32_t cpu_sr;
+extern unsigned cpu_sr;
 
 /* Critical section management. */
 extern void vPortEnterCritical( void );
@@ -220,11 +220,7 @@ extern uint32_t g_esp_ticks_per_us;
  *
  * @return idle ticks
  */
-#if ( configUSE_TICKLESS_IDLE == 0 )
 TickType_t prvGetExpectedIdleTime(void);
-#endif
-
-BaseType_t xPortInIsrContext();
 
 #ifdef __cplusplus
 }

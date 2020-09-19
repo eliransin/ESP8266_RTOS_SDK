@@ -57,7 +57,7 @@ extern uint8_t NMIIrqIsOn;
 
 uint32_t cpu_sr;
 
-unsigned _xt_tick_divisor;
+uint32_t _xt_tick_divisor;
 
 /* Each task maintains its own interrupt status in the critical nesting
 variable. */
