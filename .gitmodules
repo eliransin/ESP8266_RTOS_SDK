@@ -9,3 +9,6 @@
 [submodule "components/lwip/lwip"]
 	path = components/lwip/lwip
 	url = ../../espressif/esp-lwip.git
+[submodule "components/freertos/FreeRTOS-Labs"]
+	path = components/freertos/FreeRTOS-Labs
+	url = git@github.com:eliransin/FreeRTOS-Labs.git
