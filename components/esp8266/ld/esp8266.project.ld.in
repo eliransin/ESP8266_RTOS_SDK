@@ -60,7 +60,7 @@ SECTIONS
     . = 0x70;
     KEEP(*(.DoubleExceptionVector.text));
 
-    *(.text .literal) 
+    /* *(.text .literal) */
 
     *(.*Vector.literal)
 
