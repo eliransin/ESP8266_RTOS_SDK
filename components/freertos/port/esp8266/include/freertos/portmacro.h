@@ -226,6 +226,26 @@ TickType_t prvGetExpectedIdleTime(void);
 
 BaseType_t xPortInIsrContext();
 
+#include "esp_heap_caps.h"
+#define pvMALLOC_DRAM (MALLOC_CAP_8BIT | MALLOC_CAP_32BIT | MALLOC_CAP_DMA)
+#define pvMALLOC_IRAM (MALLOC_CAP_32BIT)
+
+static inline void *pvPortMalloc( size_t xSize ) {
+    return heap_caps_malloc(xSize, pvMALLOC_DRAM);
+}
+static inline void vPortFree( void *pv ) {
+    heap_caps_free(pv);
+}
+/*void vPortInitialiseBlocks( void ) PRIVILEGED_FUNCTION;
+size_t xPortGetFreeHeapSize( void ) PRIVILEGED_FUNCTION;
+size_t xPortGetMinimumEverFreeHeapSize( void ) PRIVILEGED_FUNCTION;*/
+
+//#define pvPortMalloc(s)     
+//#define pvPortZalloc(s)     heap_caps_zalloc(s, pvMALLOC_IRAM)
+//#define pvPortCalloc(c, s)  heap_caps_calloc(c, s, pvMALLOC_IRAM)
+//#define pvPortRealloc(p, s) heap_caps_realloc(p, s, pvMALLOC_IRAM)
+
+
 #ifdef __cplusplus
 }
 #endif
