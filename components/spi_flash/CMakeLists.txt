@@ -3,7 +3,7 @@ set(srcs "src/partition"
          "src/spi_flash.c")
 if(BOOTLOADER_BUILD)
     set(srcs "${srcs}" "port/port.c")
-    set(priv_requires "bootloader_support")
+    set(priv_requires "bootloader_support" "libgloss" "vfs")
 else()
     set(priv_requires "esp8266" "freertos" "bootloader_support")
 endif()

@@ -91,15 +91,15 @@ function(__build_set_default_build_specifications)
     unset(c_compile_options)
     unset(cxx_compile_options)
 
-    list(APPEND compile_definitions "-D_GNU_SOURCE" "-DCONFIG_FREERTOS_ISR_STACKSIZE=${CONFIG_FREERTOS_ISR_STACKSIZE}")
+    list(APPEND compile_definitions "-D_GNU_SOURCE")
 
     list(APPEND compile_options     "-ffunction-sections"
                                     "-fdata-sections"
                                     "-fstrict-volatile-bitfields"
                                     "-nostdlib"
                                     # warning-related flags
-                                    "-Wall"
-                                    "-Werror=all"
+                                    "-Wincompatible-pointer-types"
+                                    "-Werror"
                                     "-Wno-error=unused-function"
                                     "-Wno-error=unused-but-set-variable"
                                     "-Wno-error=unused-variable"
@@ -107,9 +107,13 @@ function(__build_set_default_build_specifications)
                                     "-Wextra"
                                     "-Wno-unused-parameter"
                                     "-Wno-sign-compare"
+                                    "-Wno-format"
                                     # always generate debug symbols (even in release mode, these don't
                                     # go into the final binary so have no impact on size
-                                    "-ggdb")
+                                    "-ggdb"
+                                    "-save-temps=obj"
+                                    "-fverbose-asm"
+                                    )
 
     list(APPEND c_compile_options   "-std=gnu99"
                                     "-Wno-old-style-declaration")

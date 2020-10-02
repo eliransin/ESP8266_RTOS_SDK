@@ -164,7 +164,9 @@ void IRAM_ATTR xPortSysTickHandle(void *p)
     ticks = us / 1000 / portTICK_PERIOD_MS;
 
     if (ticks > 1) {
-        vTaskStepTick(ticks - 1);
+#if (configUSE_TICKLESS_IDLE !=0)
+            vTaskStepTick(ticks - 1);
+#endif
     }
 
     g_esp_os_ticks++;

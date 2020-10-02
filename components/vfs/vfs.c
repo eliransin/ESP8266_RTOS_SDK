@@ -26,7 +26,7 @@
 #include "freertos/semphr.h"
 #include "esp_vfs.h"
 #include "sdkconfig.h"
-
+#define __getreent() _REENT
 #ifdef CONFIG_VFS_SUPPRESS_SELECT_DEBUG_OUTPUT
 #define LOG_LOCAL_LEVEL ESP_LOG_NONE
 #endif //CONFIG_VFS_SUPPRESS_SELECT_DEBUG_OUTPUT

@@ -54,7 +54,8 @@
 #define configUSE_IDLE_HOOK			1
 #define configUSE_TICK_HOOK			1
 
-#define configUSE_TICKLESS_IDLE 	1
+//TODO: Figure thi out completely
+#define configUSE_TICKLESS_IDLE 	0
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 80000000 )	
 #define configTICK_RATE_HZ			( ( portTickType ) CONFIG_FREERTOS_HZ )
 #define configMAX_PRIORITIES		15

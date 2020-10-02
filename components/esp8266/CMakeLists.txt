@@ -1,10 +1,10 @@
-if(BOOTLOADER_BUILD)
-    # For bootloader, all we need from esp8266 is headers
+if(BOOTLOADER_BUILD)   
+# For bootloader, all we need from esp8266 is headers
     set(COMPONENT_ADD_INCLUDEDIRS include)
     # set(COMPONENT_REQUIRES ${COMPONENTS})
     set(COMPONENT_SRCS source/ets_printf.c source/crc.c source/esp_fast_boot.c)
     register_component(esp8266)
-
+    target_compile_definitions(${COMPONENT_LIB} PUBLIC -D __ESP_FILE__=__FILE__)
     # as cmake won't attach linker args to a header-only library, attach
     # linker args directly to the bootloader.elf
     set(ESP8266_BOOTLOADER_LINKER_SCRIPTS

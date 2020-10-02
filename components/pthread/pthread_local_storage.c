@@ -172,14 +172,8 @@ void pthread_internal_local_storage_destructor_callback(void)
         /* remove the thread-local-storage pointer to avoid the idle task cleanup
            calling it again...
         */
-#if defined(CONFIG_FREERTOS_ENABLE_STATIC_TASK_CLEAN_UP)
+
         vTaskSetThreadLocalStoragePointer(NULL, PTHREAD_TLS_INDEX, NULL);
-#else
-        vTaskSetThreadLocalStoragePointerAndDelCallback(NULL,
-                                                        PTHREAD_TLS_INDEX,
-                                                        NULL,
-                                                        NULL);
-#endif
     }
 }
 
@@ -221,14 +215,8 @@ int pthread_setspecific(pthread_key_t key, const void *value)
         if (tls == NULL) {
             return ENOMEM;
         }
-#if defined(CONFIG_FREERTOS_ENABLE_STATIC_TASK_CLEAN_UP)
+
         vTaskSetThreadLocalStoragePointer(NULL, PTHREAD_TLS_INDEX, tls);
-#else
-        vTaskSetThreadLocalStoragePointerAndDelCallback(NULL,
-                                                        PTHREAD_TLS_INDEX,
-                                                        tls,
-                                                        pthread_local_storage_thread_deleted_callback);
-#endif
     }
 
     value_entry_t *entry = find_value(tls, key);
