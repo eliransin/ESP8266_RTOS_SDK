@@ -1,0 +1,4 @@
+[mapping:xtensa]
+archive: libxtensa_rtos_sdk.a
+entries:
+    * (noflash)
