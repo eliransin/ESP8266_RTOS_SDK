@@ -140,7 +140,7 @@ _chip_nmi_cnt:   .space 4
     .global     _chip_interrupt_stk, _chip_interrupt_tmp
     .align      16
 _chip_interrupt_stk:
-    .space       CONFIG_FREERTOS_ISR_STACKSIZE
+    .space       XTENSA_CONFIG_FREERTOS_ISR_STACKSIZE
 _chip_interrupt_tmp:
     .word        0
 
