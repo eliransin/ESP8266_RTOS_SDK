@@ -499,7 +499,7 @@ static int httpd_sock_err(const char *ctx, int sockfd)
 {
     int errval;
     int sock_err;
-    size_t sock_err_len = sizeof(sock_err);
+    socklen_t sock_err_len = sizeof(sock_err);
 
     if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &sock_err, &sock_err_len) < 0) {
         ESP_LOGE(TAG, LOG_FMT("error calling getsockopt : %d"), errno);

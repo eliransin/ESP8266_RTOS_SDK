@@ -170,7 +170,7 @@ static int tcp_close(esp_transport_handle_t t)
     return ret;
 }
 
-static esp_err_t tcp_destroy(esp_transport_handle_t t)
+static int tcp_destroy(esp_transport_handle_t t)
 {
     transport_tcp_t *tcp = esp_transport_get_context_data(t);
     esp_transport_close(t);

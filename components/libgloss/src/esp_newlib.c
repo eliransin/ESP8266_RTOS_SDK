@@ -41,7 +41,8 @@ void esp_reent_init(struct _reent* r)
     r->__sglue._next = NULL;
     r->__sglue._niobs = 0;
     r->__sglue._iobs = NULL;
-    r->_locale = "C";
+    //some warning as error configurations will not compile without the cast
+    r->_locale = (struct __locale_t*)"C";
     r->__sdidinit = 1;
 }
 

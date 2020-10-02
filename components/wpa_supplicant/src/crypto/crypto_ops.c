@@ -22,6 +22,17 @@
 #include "esp_wpa.h"
 #include "ccmp.h"
 
+
+static void hmac_sha256_vector_wrapper(const unsigned char *key, int key_len, int num_elem,
+			                   const unsigned char *addr[], const int *len, unsigned char *mac) {
+    (void)hmac_sha256_vector(key, key_len, num_elem, addr, len, mac);
+}
+
+static void sha256_prf_wrapper(const unsigned char *key, int key_len, const char *label,
+	                           const unsigned char *data, int data_len, unsigned char *buf, int buf_len) {
+    (void)sha256_prf(key,key_len,label,data,data_len,buf, buf_len);
+}
+
 /* 
  * This structure is used to set the cyrpto callback function for station to connect when in security mode.
  * These functions either call MbedTLS API's if USE_MBEDTLS_CRYPTO flag is set through Kconfig, or native
@@ -33,8 +44,8 @@ const wpa_crypto_funcs_t g_wifi_default_wpa_crypto_funcs = {
     .version = ESP_WIFI_CRYPTO_VERSION,
     .aes_wrap = (esp_aes_wrap_t)aes_wrap,
     .aes_unwrap = (esp_aes_unwrap_t)aes_unwrap,
-    .hmac_sha256_vector = (esp_hmac_sha256_vector_t)hmac_sha256_vector,
-    .sha256_prf = (esp_sha256_prf_t)sha256_prf,
+    .hmac_sha256_vector = hmac_sha256_vector_wrapper,
+    .sha256_prf = sha256_prf_wrapper,
     .hmac_md5 = (esp_hmac_md5_t)hmac_md5,
     .hamc_md5_vector = (esp_hmac_md5_vector_t)hmac_md5_vector,
     .hmac_sha1 = (esp_hmac_sha1_t)hmac_sha1,

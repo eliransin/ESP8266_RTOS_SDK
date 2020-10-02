@@ -466,7 +466,7 @@ static esp_err_t i2s_set_rate(i2s_port_t i2s_num, uint32_t rate)
 
     for (uint8_t i = 1; i < 64; i++) {
         for (uint8_t j = i; j < 64; j++) {
-            float new_delta = abs(((float)scaled_base_freq / i / j) - rate);
+            float new_delta = fabs(((float)scaled_base_freq / i / j) - rate);
 
             if (new_delta < delta_best) {
                 delta_best = new_delta;

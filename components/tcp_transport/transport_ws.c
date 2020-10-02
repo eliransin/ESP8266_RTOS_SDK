@@ -431,7 +431,7 @@ static int ws_close(esp_transport_handle_t t)
     return esp_transport_close(ws->parent);
 }
 
-static esp_err_t ws_destroy(esp_transport_handle_t t)
+static int ws_destroy(esp_transport_handle_t t)
 {
     transport_ws_t *ws = esp_transport_get_context_data(t);
     free(ws->buffer);

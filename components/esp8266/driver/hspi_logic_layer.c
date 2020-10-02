@@ -34,8 +34,8 @@ typedef struct {
     bool is_blocking_recv;
     uint32_t sending_len;
     uint32_t recving_len;
-    StreamBufferHandle_t* tx_buffer;
-    StreamBufferHandle_t* rx_buffer;
+    StreamBufferHandle_t tx_buffer;
+    StreamBufferHandle_t rx_buffer;
 
     SemaphoreHandle_t semphor;
     spi_event_callback_t event_cb;

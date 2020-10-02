@@ -114,7 +114,7 @@ static esp_err_t verify_url (http_parser *parser)
 /* http_parser callback on finding url in HTTP request
  * Will be invoked ATLEAST once every packet
  */
-static esp_err_t cb_url(http_parser *parser,
+static int cb_url(http_parser *parser,
                         const char *at, size_t length)
 {
     parser_data_t *parser_data = (parser_data_t *) parser->data;
@@ -185,7 +185,7 @@ static size_t continue_parsing(http_parser *parser, size_t length)
 /* http_parser callback on header field in HTTP request
  * May be invoked ATLEAST once every header field
  */
-static esp_err_t cb_header_field(http_parser *parser, const char *at, size_t length)
+static int cb_header_field(http_parser *parser, const char *at, size_t length)
 {
     parser_data_t *parser_data = (parser_data_t *) parser->data;
     struct httpd_req *r        = parser_data->req;
@@ -235,7 +235,7 @@ static esp_err_t cb_header_field(http_parser *parser, const char *at, size_t len
 /* http_parser callback on header value in HTTP request.
  * May be invoked ATLEAST once every header value
  */
-static esp_err_t cb_header_value(http_parser *parser, const char *at, size_t length)
+static int cb_header_value(http_parser *parser, const char *at, size_t length)
 {
     parser_data_t *parser_data = (parser_data_t *) parser->data;
     struct httpd_req *r        = parser_data->req;
@@ -265,7 +265,7 @@ static esp_err_t cb_header_value(http_parser *parser, const char *at, size_t len
 /* http_parser callback on completing headers in HTTP request.
  * Will be invoked ONLY once every packet
  */
-static esp_err_t cb_headers_complete(http_parser *parser)
+static int cb_headers_complete(http_parser *parser)
 {
     parser_data_t *parser_data = (parser_data_t *) parser->data;
     struct httpd_req *r        = parser_data->req;
@@ -313,7 +313,7 @@ static esp_err_t cb_headers_complete(http_parser *parser)
 /* Last http_parser callback if body present in HTTP request.
  * Will be invoked ONLY once every packet
  */
-static esp_err_t cb_on_body(http_parser *parser, const char *at, size_t length)
+static int cb_on_body(http_parser *parser, const char *at, size_t length)
 {
     parser_data_t *parser_data = (parser_data_t *) parser->data;
 
@@ -343,7 +343,7 @@ static esp_err_t cb_on_body(http_parser *parser, const char *at, size_t length)
 /* Last http_parser callback if body absent in HTTP request.
  * Will be invoked ONLY once every packet
  */
-static esp_err_t cb_no_body(http_parser *parser)
+static int cb_no_body(http_parser *parser)
 {
     parser_data_t *parser_data = (parser_data_t *) parser->data;
     const char* at             = parser_data->last.at;

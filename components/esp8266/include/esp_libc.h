@@ -38,7 +38,7 @@
 extern "C" {
 #endif
 
-int32_t os_get_random(unsigned char *buf, size_t len);
+int os_get_random(unsigned char *buf, size_t len);
 
 /**
   * @brief  put a character to uart or other devices, similar with putc.

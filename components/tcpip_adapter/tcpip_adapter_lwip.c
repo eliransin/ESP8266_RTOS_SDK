@@ -87,7 +87,7 @@ void system_station_got_ip_set();
 
 static int dhcp_fail_time = 0;
 static tcpip_adapter_ip_info_t esp_ip[TCPIP_ADAPTER_IF_MAX];
-static TimerHandle_t *dhcp_check_timer;
+static TimerHandle_t dhcp_check_timer;
 
 static void tcpip_adapter_dhcps_cb(u8_t client_ip[4])
 {
@@ -269,7 +269,7 @@ no_mem:
  *
  * @return 0 if success or others if failed
  */
-static int tcpip_adapter_ap_recv_cb(void *buffer, uint16_t len, void *eb)
+static esp_err_t tcpip_adapter_ap_recv_cb(void *buffer, uint16_t len, void *eb)
 {
     return tcpip_adapter_recv_cb(esp_netif[ESP_IF_WIFI_AP], buffer, len, eb);
 }
@@ -282,7 +282,7 @@ static int tcpip_adapter_ap_recv_cb(void *buffer, uint16_t len, void *eb)
  *
  * @return 0 if success or others if failed
  */
-static int tcpip_adapter_sta_recv_cb(void *buffer, uint16_t len, void *eb)
+static esp_err_t tcpip_adapter_sta_recv_cb(void *buffer, uint16_t len, void *eb)
 {
     return tcpip_adapter_recv_cb(esp_netif[ESP_IF_WIFI_STA], buffer, len, eb);
 }
@@ -770,7 +770,7 @@ esp_err_t tcpip_adapter_dhcps_option(tcpip_adapter_option_mode_t opt_op, tcpip_a
 
             if (poll->enable) {
                 memset(&info, 0x00, sizeof(tcpip_adapter_ip_info_t));
-                tcpip_adapter_get_ip_info(ESP_IF_WIFI_AP, &info);
+                tcpip_adapter_get_ip_info((tcpip_adapter_if_t)ESP_IF_WIFI_AP, &info);
                 softap_ip = htonl(info.ip.addr);
                 start_ip = htonl(poll->start_ip.addr);
                 end_ip = htonl(poll->end_ip.addr);
@@ -911,7 +911,7 @@ esp_err_t tcpip_adapter_dhcps_start(tcpip_adapter_if_t tcpip_if)
 
         if (p_netif != NULL && netif_is_up(p_netif)) {
             tcpip_adapter_ip_info_t default_ip;
-            tcpip_adapter_get_ip_info(ESP_IF_WIFI_AP, &default_ip);
+            tcpip_adapter_get_ip_info((tcpip_adapter_if_t)ESP_IF_WIFI_AP, &default_ip);
             dhcps_start(p_netif, default_ip.ip);
             dhcps_status = TCPIP_ADAPTER_DHCP_STARTED;
             ESP_LOGD(TAG, "dhcp server start successfully");

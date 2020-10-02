@@ -398,7 +398,7 @@ uint32_t esp_get_old_sysconf_addr(void)
 
 void os_update_cpu_frequency(uint32_t ticks_per_us)
 {
-    extern uint32_t _xt_tick_divisor;
+    extern unsigned _xt_tick_divisor;
 
     if (REG_READ(DPORT_CTL_REG) & DPORT_CTL_DOUBLE_CLK) {
         g_esp_ticks_per_us = CPU_CLK_FREQ * 2 / 1000000;
