@@ -816,6 +816,7 @@ esp_err_t esp_http_client_perform(esp_http_client_handle_t client)
                     return err;
                 }
                 /* falls through */
+            __attribute__ ((fallthrough));
             case HTTP_STATE_CONNECTED:
                 if ((err = esp_http_client_request_send(client, client->post_len)) != ESP_OK) {
                     if (client->is_async && errno == EAGAIN) {
@@ -824,6 +825,7 @@ esp_err_t esp_http_client_perform(esp_http_client_handle_t client)
                     return err;
                 }
                 /* falls through */
+            __attribute__ ((fallthrough));
             case HTTP_STATE_REQ_COMPLETE_HEADER:
                 if ((err = esp_http_client_send_post_data(client)) != ESP_OK) {
                     if (client->is_async && errno == EAGAIN) {
@@ -832,6 +834,7 @@ esp_err_t esp_http_client_perform(esp_http_client_handle_t client)
                     return err;
                 }
                 /* falls through */
+            __attribute__ ((fallthrough));
             case HTTP_STATE_REQ_COMPLETE_DATA:
                 if (esp_http_client_fetch_headers(client) < 0) {
                     if (client->is_async && errno == EAGAIN) {
@@ -840,6 +843,7 @@ esp_err_t esp_http_client_perform(esp_http_client_handle_t client)
                     return ESP_ERR_HTTP_FETCH_HEADER;
                 }
                 /* falls through */
+            __attribute__ ((fallthrough));
             case HTTP_STATE_RES_COMPLETE_HEADER:
                 if ((err = esp_http_check_response(client)) != ESP_OK) {
                     ESP_LOGE(TAG, "Error response");

@@ -542,7 +542,7 @@ static int uart_tcsetattr(int fd, int optional_actions, const struct termios *p)
             }
 
             /* FALLTHRU */
-
+         __attribute__ ((fallthrough));
         case TCSAFLUSH:
             if (uart_flush_input(fd) != ESP_OK) {
                 errno = EINVAL;

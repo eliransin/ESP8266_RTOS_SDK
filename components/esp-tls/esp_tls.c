@@ -261,6 +261,7 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
         }
         tls->conn_state = ESP_TLS_CONNECTING;
     /* falls through */
+    __attribute__ ((fallthrough));
     case ESP_TLS_CONNECTING:
         if (cfg->non_block) {
             ESP_LOGD(TAG, "connecting...");
@@ -299,6 +300,7 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
         tls->write = _esp_tls_write;
         tls->conn_state = ESP_TLS_HANDSHAKE;
     /* falls through */
+    __attribute__ ((fallthrough));
     case ESP_TLS_HANDSHAKE:
         ESP_LOGD(TAG, "handshake in progress...");
         return esp_tls_handshake(tls, cfg);

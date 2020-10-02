@@ -109,6 +109,7 @@ to_base64(char *dst, size_t dst_len, const void *src, size_t src_len)
     case 2:
         olen++;
     /* fall through */
+    __attribute__ ((fallthrough));
     case 1:
         olen += 2;
         break;

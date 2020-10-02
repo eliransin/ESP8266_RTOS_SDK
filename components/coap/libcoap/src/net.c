@@ -1081,6 +1081,7 @@ coap_new_error_response(coap_pdu_t *request, unsigned char code,
     case 0x0e:
       size++;
       /* fall through */
+    __attribute__ ((fallthrough));
     case 0x0d:
       size++;
       break;
