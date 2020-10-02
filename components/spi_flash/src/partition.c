@@ -16,7 +16,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include <sys/lock.h>
+#include <lock.h>
 
 #include "esp_attr.h"
 #include "esp_flash_data_types.h"
@@ -59,7 +59,7 @@ static esp_err_t load_partitions();
 
 static SLIST_HEAD(partition_list_head_, partition_list_item_) s_partition_list =
         SLIST_HEAD_INITIALIZER(s_partition_list);
-static _lock_t s_partition_list_lock;
+static _lock_t s_partition_list_lock = LOCK_INIT_VAL;
 
 
 esp_partition_iterator_t esp_partition_find(esp_partition_type_t type,

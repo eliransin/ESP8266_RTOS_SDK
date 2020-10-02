@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <lock.h>
 #include "esp_vfs_dev.h"
 
 #define _STR(_s)    #_s

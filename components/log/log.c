@@ -19,7 +19,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sys/queue.h>
-#include <sys/lock.h>
+#include <lock.h>
 
 #include "esp_libc.h"
 #include "esp_attr.h"
@@ -89,7 +89,7 @@ static SLIST_HEAD(log_tags_head , uncached_tag_entry_) s_log_uncached_tags = SLI
 static uncached_tag_entry_t *s_uncached_tag_entry_prev;
 #endif /* CONFIG_LOG_SET_LEVEL */
 
-static _lock_t s_lock;
+static _lock_t s_lock = LOCK_INIT_VAL;
 static putchar_like_t s_putchar_func = &putchar;
 
 #ifdef CONFIG_LOG_SET_LEVEL

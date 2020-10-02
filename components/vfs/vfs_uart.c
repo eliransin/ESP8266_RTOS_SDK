@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <sys/errno.h>
-#include <sys/lock.h>
+#include <lock.h>
 #include <sys/fcntl.h>
 #include <sys/param.h>
 #include "esp_vfs.h"

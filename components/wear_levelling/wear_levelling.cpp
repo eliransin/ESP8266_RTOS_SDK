@@ -14,7 +14,7 @@
 
 #include <stdlib.h>
 #include <new>
-#include <sys/lock.h>
+#include <lock.h>
 #include "wear_levelling.h"
 #include "WL_Config.h"
 #include "WL_Ext_Cfg.h"
@@ -54,7 +54,7 @@ typedef struct {
 } wl_instance_t;
 
 static wl_instance_t s_instances[MAX_WL_HANDLES];
-static _lock_t s_instances_lock;
+static _lock_t s_instances_lock = LOCK_INIT_VAL;
 static const char *TAG = "wear_levelling";
 
 static esp_err_t check_handle(wl_handle_t handle, const char *func);

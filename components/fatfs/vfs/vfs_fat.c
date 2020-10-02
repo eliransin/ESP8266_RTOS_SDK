@@ -18,7 +18,7 @@
 #include <dirent.h>
 #include <sys/errno.h>
 #include <sys/fcntl.h>
-#include <sys/lock.h>
+#include <lock.h>
 #include "esp_vfs.h"
 #include "esp_log.h"
 #include "ff.h"

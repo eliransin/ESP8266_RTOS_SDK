@@ -20,6 +20,15 @@
 #include "semphr.h"
 #include "task.h"
 
+struct __lock __lock___sinit_recursive_mutex;
+struct __lock __lock___sfp_recursive_mutex;
+struct __lock __lock___atexit_recursive_mutex;
+struct __lock __lock___at_quick_exit_mutex;
+struct __lock __lock___malloc_recursive_mutex;
+struct __lock __lock___env_recursive_mutex;
+struct __lock __lock___tz_mutex;
+struct __lock __lock___dd_hash_mutex;
+struct __lock __lock___arc4random_mutex;
 
 /* Initialize the given lock by allocating a new mutex semaphore
    as the _lock_t value.
@@ -67,13 +76,15 @@ static void lock_init_generic(xSemaphoreHandle *lock, uint8_t mutex_type) {
 }
 
 void __retarget_lock_init(_LOCK_T *lock) {
-    (*lock)->lock = 0; // In case lock's memory is uninitialized
-    lock_init_generic(&((*lock)->lock), queueQUEUE_TYPE_MUTEX);
+    *lock = malloc(sizeof(**lock)); // In case lock's memory is uninitialized
+    (*lock)->lock = 0;
+    lock_init_generic((xSemaphoreHandle*)*lock, queueQUEUE_TYPE_MUTEX);
 }
 
 void __retarget_lock_init_recursive(_LOCK_T *lock) {
-    (*lock)->lock = 0; // In case lock's memory is uninitialized
-    lock_init_generic(&((*lock)->lock), queueQUEUE_TYPE_RECURSIVE_MUTEX);
+    *lock = malloc(sizeof(**lock)); // In case lock's memory is uninitialized
+    (*lock)->lock = 0;
+    lock_init_generic((xSemaphoreHandle*)*lock, queueQUEUE_TYPE_RECURSIVE_MUTEX);
 }
 
 /* Free the mutex semaphore pointed to by *lock, and zero it out.
@@ -100,11 +111,11 @@ static void lock_close_generic(xSemaphoreHandle *lock,  uint8_t mutex_type) {
 }
 
 void __retarget_lock_close(_LOCK_T lock) {
-    lock_close_generic(&(lock->lock), queueQUEUE_TYPE_MUTEX);
+    lock_close_generic((xSemaphoreHandle*)lock, queueQUEUE_TYPE_MUTEX);
 }
 
 void __retarget_lock_close_recursive(_LOCK_T lock) {
-    lock_close_generic(&(lock->lock), queueQUEUE_TYPE_RECURSIVE_MUTEX);
+    lock_close_generic((xSemaphoreHandle*)lock, queueQUEUE_TYPE_RECURSIVE_MUTEX);
 }
 
 /* Acquire the mutex semaphore for lock. wait up to delay ticks.
@@ -155,19 +166,19 @@ static int lock_acquire_generic(xSemaphoreHandle *lock, uint32_t delay, uint8_t 
 }
 
 void __retarget_lock_acquire(_LOCK_T lock) {
-    lock_acquire_generic(&lock->lock, portMAX_DELAY, queueQUEUE_TYPE_MUTEX);
+    lock_acquire_generic((xSemaphoreHandle*)lock, portMAX_DELAY, queueQUEUE_TYPE_MUTEX);
 }
 
 void __retarget_lock_acquire_recursive(_LOCK_T lock) {
-    lock_acquire_generic(&(lock->lock), portMAX_DELAY, queueQUEUE_TYPE_RECURSIVE_MUTEX);
+    lock_acquire_generic((xSemaphoreHandle*)lock, portMAX_DELAY, queueQUEUE_TYPE_RECURSIVE_MUTEX);
 }
 
 int __retarget_lock_try_acquire(_LOCK_T lock) {
-    return lock_acquire_generic(&(lock->lock), 0, queueQUEUE_TYPE_MUTEX);
+    return lock_acquire_generic((xSemaphoreHandle*)lock, 0, queueQUEUE_TYPE_MUTEX);
 }
 
 int __retarget_lock_try_acquire_recursive(_LOCK_T lock) {
-    return lock_acquire_generic(&(lock->lock), 0, queueQUEUE_TYPE_RECURSIVE_MUTEX);
+    return lock_acquire_generic((xSemaphoreHandle*)lock, 0, queueQUEUE_TYPE_RECURSIVE_MUTEX);
 }
 
 /* Release the mutex semaphore for lock.
@@ -205,9 +216,9 @@ static void lock_release_generic(xSemaphoreHandle *lock, uint8_t mutex_type) {
 }
 
 void __retarget_lock_release(_LOCK_T lock) {
-    lock_release_generic(&(lock->lock), queueQUEUE_TYPE_MUTEX);
+    lock_release_generic((xSemaphoreHandle*)lock, queueQUEUE_TYPE_MUTEX);
 }
 
 void __retarget_lock_release_recursive(_LOCK_T lock) {
-    lock_release_generic(&(lock->lock), queueQUEUE_TYPE_RECURSIVE_MUTEX);
+    lock_release_generic((xSemaphoreHandle*)lock, queueQUEUE_TYPE_RECURSIVE_MUTEX);
 }

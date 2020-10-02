@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <lock.h>
 #include <string.h>
 #include "esp_err.h"
 #include "esp_attr.h"

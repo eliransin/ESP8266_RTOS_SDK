@@ -19,7 +19,8 @@
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/unistd.h>
-#include <sys/lock.h>
+#include <reent.h>
+#include <lock.h>
 #include <sys/param.h>
 #include <dirent.h>
 #include "freertos/FreeRTOS.h"
@@ -70,7 +71,7 @@ static vfs_entry_t* s_vfs[VFS_MAX_COUNT] = { 0 };
 static size_t s_vfs_count = 0;
 
 static fd_table_t s_fd_table[MAX_FDS] = { [0 ... MAX_FDS-1] = FD_TABLE_ENTRY_UNUSED };
-static _lock_t s_fd_table_lock;
+static _lock_t s_fd_table_lock = LOCK_INIT_VAL;
 
 static esp_err_t esp_vfs_register_common(const char* base_path, size_t len, const esp_vfs_t* vfs, void* ctx, int *vfs_index)
 {
