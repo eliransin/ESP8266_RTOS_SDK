@@ -47,6 +47,9 @@ void esp_reent_init(struct _reent* r)
     r->__sdidinit = 1;
 }
 
+static struct __lock _stdout_lock = LOCK_INIT_VAL;
+static struct __lock _stderr_lock = LOCK_INIT_VAL;
+static struct __lock _stdin_lock = LOCK_INIT_VAL;
 /*
  * @brief Initialize newlib's platform object data
  */
@@ -59,14 +62,17 @@ int esp_newlib_init(void)
     esp_vfs_dev_uart_register();
 
     _GLOBAL_REENT->_stdout = fopen(default_uart_dev, "w");
+    _GLOBAL_REENT->_stdout->_lock = &_stdout_lock;
     if (!_GLOBAL_REENT->_stdout)
         goto err;
 
     _GLOBAL_REENT->_stderr = fopen(default_uart_dev, "w");
+    _GLOBAL_REENT->_stderr->_lock = &_stderr_lock;
     if (!_GLOBAL_REENT->_stderr)
         goto err_fail;
 
     _GLOBAL_REENT->_stdin = fopen(default_uart_dev, "r");
+    _GLOBAL_REENT->_stdin->_lock = &_stdin_lock;
     if (!_GLOBAL_REENT->_stdin)
         goto err_in;
 
