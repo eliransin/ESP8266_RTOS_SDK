@@ -800,6 +800,13 @@ int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate)
     return EINVAL;
 }
 
+//TODO: Figure out the linking here
+int
+pthread_setcancelstate (int state, int *oldstate)
+{
+    return 0;
+}
+
 /* Hook function to force linking this file */
 void pthread_include_pthread_impl(void)
 {

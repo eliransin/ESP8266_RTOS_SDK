@@ -2065,9 +2065,9 @@ void wpa_register(char* payload, WPA_SEND_FUNC snd_func,
     if (sm->pmksa == NULL) {
         wpa_printf(MSG_ERROR,
                 "RSN: PMKSA cache initialization failed");
-        return false;
+//        return false;
     }
-    return true;
+//    return true;
 }
 
 /** 
