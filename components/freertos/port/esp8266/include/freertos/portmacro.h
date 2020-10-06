@@ -245,6 +245,8 @@ size_t xPortGetMinimumEverFreeHeapSize( void ) PRIVILEGED_FUNCTION;*/
 //#define pvPortCalloc(c, s)  heap_caps_calloc(c, s, pvMALLOC_IRAM)
 //#define pvPortRealloc(p, s) heap_caps_realloc(p, s, pvMALLOC_IRAM)
 
+#define configUSE_APPLICATION_TASK_TAG 1
+#define configSUPPORT_STATIC_ALLOCATION 1
 
 #ifdef __cplusplus
 }

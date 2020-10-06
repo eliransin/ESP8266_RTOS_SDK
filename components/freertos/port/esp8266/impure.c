@@ -19,8 +19,8 @@
 
 #define ERRNO_TLS_INDEX (configNUM_THREAD_LOCAL_STORAGE_POINTERS - 1)
 
-static struct _reent impure_data;
-struct _reent *_global_impure_ptr = &impure_data;
+/*static struct _reent impure_data;
+struct _reent *_global_impure_ptr = &impure_data;*/
 
 struct _reent *__getreent()
 {
@@ -38,16 +38,17 @@ struct _reent *__getreent()
     if (xPortInIsrContext() 
         || !xTaskGetCurrentTaskHandle()
         || xTaskGetSchedulerState() != taskSCHEDULER_RUNNING)
-        return &impure_data;
+        return _REENT;
 
     /*
      * When scheduler starts, _global_impure_ptr = pxCurrentTCB->xNewLib_reent.
      */
 #endif
-    return _global_impure_ptr;
+    return _GLOBAL_REENT;
 }
 
 int *__errno(void)
 {
-    return (int *)pvTaskGetThreadLocalStorageBufferPointer(NULL, ERRNO_TLS_INDEX);
+    //return (int *)pvTaskGetThreadLocalStorageBufferPointer(NULL, ERRNO_TLS_INDEX);
+    return &_REENT->_errno;
 }
