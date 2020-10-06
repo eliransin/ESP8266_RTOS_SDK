@@ -9,6 +9,15 @@
 [submodule "components/lwip/lwip"]
 	path = components/lwip/lwip
 	url = ../../espressif/esp-lwip.git
-[submodule "components/freertos/FreeRTOS-Labs"]
-	path = components/freertos/FreeRTOS-Labs
-	url = git@github.com:eliransin/FreeRTOS-Labs.git
+
+[submodule "components/pthread/Lab-Project-FreeRTOS-POSIX"]
+	path = components/pthread/Lab-Project-FreeRTOS-POSIX
+	url = https://github.com/eliransin/Lab-Project-FreeRTOS-POSIX.git
+
+[submodule "components/freertos/FreeRTOS-Kernel"]
+	path = components/freertos/FreeRTOS-Kernel
+	url = https://github.com/eliransin/FreeRTOS-Kernel.git
+
+[submodule "components/freertos_tcp/FreeRTOS-Plus-TCP"]
+	path = components/freertos_tcp/FreeRTOS-Plus-TCP
+	url = https://github.com/eliransin/FreeRTOS-Plus-TCP.git
