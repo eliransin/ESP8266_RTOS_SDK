@@ -7,6 +7,6 @@ set(COMPONENT_SRCS "src/httpd_main.c"
                    "src/httpd_uri.c"
                    "src/util/ctrl_sock.c")
 
-set(COMPONENT_PRIV_REQUIRES lwip http_parser)
+set(COMPONENT_PRIV_REQUIRES freertos_tcp http_parser)
 
 register_component()

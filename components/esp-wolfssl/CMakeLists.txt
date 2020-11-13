@@ -3,7 +3,7 @@ if(CONFIG_ESP_WOLFSSL_INTERNAL)
 set(COMPONENT_ADD_INCLUDEDIRS wolfssl/include wolfssl/wolfssl wolfssl/wolfssl/wolfssl)
 set(COMPONENT_SRCDIRS "wolfssl/source")
 
-set(COMPONENT_REQUIRES "lwip" "${target}")
+set(COMPONENT_REQUIRES "freertos_tcp" "${target}")
 endif()
 
 register_component()

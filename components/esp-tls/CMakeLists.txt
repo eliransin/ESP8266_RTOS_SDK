@@ -13,7 +13,7 @@ idf_component_register(SRCS "${srcs}"
                     INCLUDE_DIRS "."
                     PRIV_INCLUDE_DIRS "private_include"
                     REQUIRES mbedtls
-                    PRIV_REQUIRES lwip http_parser)
+                    PRIV_REQUIRES freertos_tcp http_parser)
 
 if(CONFIG_ESP_TLS_USING_WOLFSSL)
     idf_component_get_property(wolfssl esp-wolfssl COMPONENT_LIB)

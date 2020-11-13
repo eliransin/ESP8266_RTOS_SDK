@@ -5,6 +5,6 @@ set(COMPONENT_SRCS "esp-mqtt/mqtt_client.c"
                    "esp-mqtt/lib/mqtt_outbox.c"
                    "esp-mqtt/lib/platform_idf.c")
 
-set(COMPONENT_REQUIRES lwip http_parser tcp_transport freertos lwip mbedtls openssl)
+set(COMPONENT_REQUIRES freertos_tcp http_parser tcp_transport freertos freertos_tcp mbedtls openssl)
 
 register_component()

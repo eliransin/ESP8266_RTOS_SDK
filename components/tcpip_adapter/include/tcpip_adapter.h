@@ -38,17 +38,37 @@
 #include <stdint.h>
 #include "esp_wifi_types.h"
 
-#define CONFIG_TCPIP_LWIP 1
+#define CONFIG_TCPIP_LWIP 0
 #define CONFIG_DHCP_STA_LIST 1
 #define TCPIP_ADAPTER_IPV6 LWIP_IPV6
 
 #if CONFIG_TCPIP_LWIP
 #include "lwip/ip_addr.h"
 #include "dhcpserver/dhcpserver.h"
+#else
+#include "sys/socket.h"
 
+typedef struct in_addr ip4_addr_t;
+typedef struct in6_addr ip6_addr_t;
+typedef union
+{
+    ip4_addr_t  ipv4_addr;
+    ip6_addr_t  ipv6_addr;
+}ip_addr_t;
+
+typedef uint32_t dhcps_lease_t;
+
+#define ip4_addr_isany_val(addr1)   ((addr1).s_addr == INADDR_ANY)
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define ip_addr_get_byte(_ipaddr,_idx) (((uint8_t*)(_ipaddr))[_idx])
+#define ip4_addr1_16(_ipaddr) ((uint16_t)ip_addr_get_byte(_ipaddr,0))
+#define ip4_addr2_16(_ipaddr) ((uint16_t)ip_addr_get_byte(_ipaddr,1))
+#define ip4_addr3_16(_ipaddr) ((uint16_t)ip_addr_get_byte(_ipaddr,2))
+#define ip4_addr4_16(_ipaddr) ((uint16_t)ip_addr_get_byte(_ipaddr,3))
 
 #define IP2STR(ipaddr) ip4_addr1_16(ipaddr), \
     ip4_addr2_16(ipaddr), \
@@ -113,8 +133,6 @@ typedef struct {
     tcpip_adapter_sta_info_t sta[ESP_WIFI_MAX_CONN_NUM];    /**< adapter station information array */
     int num;                                                /**< adapter station information number */
 } tcpip_adapter_sta_list_t;
-#endif
-
 #endif
 
 #define ESP_ERR_TCPIP_ADAPTER_BASE      0x5000      // TODO: move base address to esp_err.h

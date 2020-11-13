@@ -12,7 +12,7 @@ endif()
 
 set(LIBM m)
 
-set(COMPONENT_PRIV_REQUIRES "vfs" "lwip")  # for sys/ioctl.h
+set(COMPONENT_PRIV_REQUIRES "vfs" "freertos_tcp")  # for sys/ioctl.h
 
 register_component()
 

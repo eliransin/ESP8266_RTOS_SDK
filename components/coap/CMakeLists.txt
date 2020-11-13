@@ -19,7 +19,7 @@ set(COMPONENT_SRCS
     port/coap_io_socket.c
     )
 
-set(COMPONENT_REQUIRES lwip)
+set(COMPONENT_REQUIRES freertos_tcp)
 
 register_component()
 
