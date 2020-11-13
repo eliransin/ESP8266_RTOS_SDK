@@ -104,6 +104,7 @@ function(__build_set_default_build_specifications)
                                     "-Wno-error=unused-but-set-variable"
                                     "-Wno-error=unused-variable"
                                     "-Wno-error=deprecated-declarations"
+                                    "-Wno-error=address-of-packed-member"
                                     "-Wextra"
                                     "-Wno-unused-parameter"
                                     "-Wno-sign-compare"
