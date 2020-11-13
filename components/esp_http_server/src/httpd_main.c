@@ -14,6 +14,7 @@
 
 #include <string.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <sys/param.h>
 #include <errno.h>
 #include <esp_log.h>

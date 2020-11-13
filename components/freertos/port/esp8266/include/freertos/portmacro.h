@@ -247,7 +247,8 @@ size_t xPortGetMinimumEverFreeHeapSize( void ) PRIVILEGED_FUNCTION;*/
 
 #define configUSE_APPLICATION_TASK_TAG 1
 #define configSUPPORT_STATIC_ALLOCATION 1
-
+void setup_tcb(void *);
+#define portSETUP_TCB( pxTCB )    setup_tcb(pxTCB);
 #ifdef __cplusplus
 }
 #endif

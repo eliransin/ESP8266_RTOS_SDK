@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include "sdkconfig.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -19,11 +21,13 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
 #include <http_parser.h>
 #include "esp_tls.h"
 #include "esp_tls_error_capture_internal.h"
 #include <errno.h>
+
 static const char *TAG = "esp-tls";
 
 #ifdef CONFIG_ESP_TLS_USING_MBEDTLS
@@ -38,6 +42,8 @@ static const char *TAG = "esp-tls";
 #define ESP_LOGD(TAG, ...) //printf(__VA_ARGS__);
 #define ESP_LOGE(TAG, ...) printf(__VA_ARGS__);
 #endif
+#include "FreeRTOS.h"
+#include "task.h"
 
 #ifdef CONFIG_ESP_TLS_USING_MBEDTLS
 #define _esp_create_ssl_handle              esp_create_mbedtls_handle

@@ -1,3 +1,4 @@
+
 /*
  * This file is subject to the terms and conditions defined in
  * file 'LICENSE', which is part of this source code package.
@@ -12,11 +13,12 @@
 #include "freertos/queue.h"
 #include "freertos/event_groups.h"
 
-#include "lwip/err.h"
+/*#include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
-#include "lwip/dns.h"
+#include "lwip/dns.h"*/
+#include <errno.h>
 
 #include "rom/queue.h"
 #include "esp_err.h"

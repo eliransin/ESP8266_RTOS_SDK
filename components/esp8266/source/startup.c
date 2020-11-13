@@ -86,7 +86,7 @@ static void user_init_entry(void *param)
 #endif
 
 #ifdef CONFIG_ENABLE_PTHREAD
-    assert(esp_pthread_init() == 0);
+    //assert(esp_pthread_init() == 0);
 #endif
 
 #ifdef CONFIG_BOOTLOADER_FAST_BOOT

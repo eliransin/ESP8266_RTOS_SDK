@@ -20,6 +20,7 @@
 #include <esp_http_server.h>
 #include "esp_httpd_priv.h"
 #include <sys/fcntl.h>
+#include <errno.h>
 
 static const char *TAG = "httpd_sess";
 

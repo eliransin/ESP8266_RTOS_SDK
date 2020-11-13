@@ -50,6 +50,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdint.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+
 
 /*
  * Prepare for using the sockets interface

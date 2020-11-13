@@ -27,8 +27,9 @@
 #define HAVE_ARPA_INET_H
 
 //#define IP_PKTINFO   IP_MULTICAST_IF
+#ifndef IPV6_PKTINFO
 #define IPV6_PKTINFO IPV6_V6ONLY
-
+#endif
 #define PACKAGE_NAME "libcoap-posix"
 #define PACKAGE_VERSION "?"
 

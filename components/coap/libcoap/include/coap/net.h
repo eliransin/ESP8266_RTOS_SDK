@@ -18,6 +18,9 @@
 
 #ifdef WITH_LWIP
 #include <lwip/ip_addr.h>
+#else
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #endif
 
 #include "coap_io.h"

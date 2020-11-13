@@ -15,7 +15,7 @@
 #ifndef _WIFI_PROV_CONFIG_H_
 #define _WIFI_PROV_CONFIG_H_
 
-#include <lwip/inet.h>
+#include <arpa/inet.h>
 #include <stdlib.h>
 #ifdef __cplusplus
 extern "C" {
@@ -45,7 +45,7 @@ typedef struct {
     /**
      * IP Address received by station
      */
-    char    ip_addr[IP4ADDR_STRLEN_MAX];
+    char    ip_addr[INET_ADDRSTRLEN];
 
     char    bssid[6];   /*!< BSSID of the AP to which connection was estalished */
     char    ssid[33];   /*!< SSID of the to which connection was estalished */

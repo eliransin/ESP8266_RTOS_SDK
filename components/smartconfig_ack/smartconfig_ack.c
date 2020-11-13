@@ -31,6 +31,9 @@
 #include "esp_wifi.h"
 #include "esp_smartconfig.h"
 #include "smartconfig_ack.h"
+#include "arpa/inet.h"
+#include <unistd.h>
+#include <errno.h>
 
 static const char *TAG = "smartconfig";
 
@@ -42,7 +45,7 @@ static size_t s_sc_ack_info_size = 0;
 static int sc_ack_send_get_errno(int fd)
 {
     int sock_errno = 0;
-    u32_t optlen = sizeof(sock_errno);
+    socklen_t optlen = sizeof(sock_errno);
 
     getsockopt(fd, SOL_SOCKET, SO_ERROR, &sock_errno, &optlen);
 
@@ -84,18 +87,18 @@ static void sc_ack_send_task(void *pvParameters)
     while (s_sc_ack_send) {
         /* Get local IP address of station */
         ret = tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &local_ip);
-        if ((ESP_OK == ret) && (local_ip.ip.addr != INADDR_ANY)) {
+        if ((ESP_OK == ret) && (local_ip.ip.s_addr != INADDR_ANY)) {
             /* If ESP touch, smartconfig ACK contains local IP address. */
             if (ack->type == SC_ACK_TYPE_ESPTOUCH) {
-                memcpy(ack->ctx.ip, &local_ip.ip.addr, 4);
+                memcpy(ack->ctx.ip, &local_ip.ip.s_addr, 4);
             }
 
             /* Create UDP socket. */
             send_sock = socket(AF_INET, SOCK_DGRAM, 0);
-            if ((send_sock < LWIP_SOCKET_OFFSET) || (send_sock > (FD_SETSIZE - 1))) {
+            /*if ((send_sock < LWIP_SOCKET_OFFSET) || (send_sock > (FD_SETSIZE - 1))) {
                 ESP_LOGE(TAG,  "Creat udp socket failed");
                 goto _end;	
-            }
+            }*/
 
             setsockopt(send_sock, SOL_SOCKET, SO_BROADCAST | SO_REUSEADDR, &optval, sizeof(int));
 
@@ -169,9 +172,9 @@ static void sc_ack_send_task(void *pvParameters)
     }
 
 _end:
-    if ((send_sock >= LWIP_SOCKET_OFFSET) && (send_sock <= (FD_SETSIZE - 1))) {
+    //if ((send_sock >= LWIP_SOCKET_OFFSET) && (send_sock <= (FD_SETSIZE - 1))) {
         close(send_sock);
-    }
+    //}
     if (s_sc_ack_info) {
         free(s_sc_ack_info);
         s_sc_ack_info = NULL;

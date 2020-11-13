@@ -279,6 +279,7 @@ from the FreeRTOSIPConfig.h configuration header file. */
  * End of: HT Added some macro defaults for the PLUS-UDP project
  * -------------------------------------------------------- */
 
+#define ipconfigUSE_NETWORK_EVENT_HOOK    1
 #ifndef ipconfigUSE_NETWORK_EVENT_HOOK
 	#define ipconfigUSE_NETWORK_EVENT_HOOK    0
 #endif
@@ -300,7 +301,7 @@ from the FreeRTOSIPConfig.h configuration header file. */
 #endif
 
 #ifndef ipconfigUSE_ARP_REVERSED_LOOKUP
-	#define ipconfigUSE_ARP_REVERSED_LOOKUP    1
+	#define ipconfigUSE_ARP_REVERSED_LOOKUP    0
 #endif
 
 #ifndef ipconfigUSE_ARP_REMOVE_ENTRY

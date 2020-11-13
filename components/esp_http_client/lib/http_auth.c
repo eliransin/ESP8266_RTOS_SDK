@@ -18,7 +18,8 @@
 #include <stdarg.h>
 
 #include "tcpip_adapter.h"
-#include "lwip/sockets.h"
+//#include "lwip/sockets.h"
+#include <sys/socket.h>
 #include "rom/md5_hash.h"
 
 #include "esp_base64.h"

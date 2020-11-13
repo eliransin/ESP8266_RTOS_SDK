@@ -496,4 +496,8 @@ static StackType_t uxTimerTaskStack[ configTIMER_TASK_STACK_DEPTH ];
 }
 
 #endif
+
+void setup_tcb(void* tcb) {
+    
+}
 #endif
