@@ -424,7 +424,7 @@ void esp_internal_idle_hook(void)
 #if configUSE_IDLE_HOOK == 1
 void __attribute__((weak)) vApplicationIdleHook(void)
 {
-
+    esp_internal_idle_hook();
 }
 #endif
 
