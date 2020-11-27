@@ -1,0 +1,5 @@
+menu "PThreads"
+        config ENABLE_PTHREAD
+            bool
+            default y            
+endmenu
