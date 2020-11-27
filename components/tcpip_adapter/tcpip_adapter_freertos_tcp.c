@@ -32,6 +32,7 @@
 #include "FreeRTOS_IP.h"
 #include "FreeRTOS_IP_Private.h"
 #include "FreeRTOS_Routing.h"
+#include "NetworkBufferManagement.h"
 #include "esp_aio.h"
 int ieee80211_output_pbuf(esp_aio_t *aio);
 
@@ -82,21 +83,22 @@ typedef struct if_data {
 
 static NetworkInterface_t _esp_netif[TCPIP_ADAPTER_IF_MAX];
 static struct if_data _if_data[TCPIP_ADAPTER_IF_MAX];
-static bool _enabled_interfaces[TCPIP_ADAPTER_IF_MAX] = {true, true, false, false};
+static bool _enabled_interfaces[TCPIP_ADAPTER_IF_MAX] = {true, false, false, false};
 
 #define NET_IF(adapter) (&(_esp_netif[adapter]))
 #define IF_DATA(adapter) (&(_if_data[adapter]))
-#define IF_DATA_FROM_IF(net_if) ((struct if_data*)&(net_if->pvArgument))
+#define IF_DATA_FROM_IF(net_if) ((struct if_data*)((net_if)->pvArgument))
 #define IF_NAME_FROM_IF(net_if) (IF_DATA_FROM_IF(net_if)->if_name)
 ESP_EVENT_DEFINE_BASE(IP_EVENT);
 static const char* TAG = "tcpip_adapter";
-#define TCPIP_ADAPTER_LOGI(format_str,...)  ESP_LOGI(TAG," %s : "format_str,__PRETTY_FUNCTION__,__VA_ARGS__)
+#define TCPIP_ADAPTER_LOGI(format_str,...)  ESP_LOGI(TAG," %s : %s,%d"format_str,__PRETTY_FUNCTION__,__FILE__,__LINE__,##__VA_ARGS__)
 
 void vApplicationIPNetworkEventHook( eIPCallbackEvent_t eNetworkEvent, 
-        struct xNetworkEndPoint *pxEndPoint ) {
+        struct xNetworkEndPoint *pxEndPoint ) {    
     NetworkInterface_t* net_if = pxEndPoint->pxNetworkInterface;
     tcpip_adapter_if_t if_name = IF_NAME_FROM_IF(net_if);
-    if (eNetworkEvent = eNetworkUp) {
+    TCPIP_ADAPTER_LOGI("Adapter: %p, name: %d",net_if,if_name);
+    if (eNetworkEvent == eNetworkUp) {
         // Someone just got an IP so lets adevertise this
         bool ip_changed = false;
         tcpip_adapter_ip_info_t ip_info;
@@ -105,7 +107,7 @@ void vApplicationIPNetworkEventHook( eIPCallbackEvent_t eNetworkEvent,
         ip_info.netmask.s_addr = pxEndPoint->ulNetMask;
         tcpip_adapter_set_ip_info(if_name,&ip_info);
         system_event_t evt;
-        bool send_event = false;
+        bool send_event = false;        
         if (if_name == TCPIP_ADAPTER_IF_STA) {
             evt.event_id = SYSTEM_EVENT_STA_GOT_IP;
             send_event = true;
@@ -125,6 +127,7 @@ void vApplicationIPNetworkEventHook( eIPCallbackEvent_t eNetworkEvent,
         tcpip_adapter_set_old_ip_info(if_name,&ip_info);
         
         if(send_event) {
+            TCPIP_ADAPTER_LOGI("%s : Sending network up event",get_if_name(if_name));
             esp_event_send(&evt);
         }            
         TCPIP_ADAPTER_LOGI("%s : Network up event",get_if_name(if_name));
@@ -242,9 +245,11 @@ static bool tcpip_inited = false;
 
 
 static BaseType_t initialize_network_if(struct xNetworkInterface *net_if) {
+    TCPIP_ADAPTER_LOGI("");
     struct if_data* ifdata= (struct if_data*)net_if->pvArgument;
     TCPIP_ADAPTER_LOGI("%s - network state is %s",get_if_name(ifdata->if_name), (ifdata->state == UP)? "UP":"DOWN");    
-    return !(ifdata->state == UP);
+    
+    return (ifdata->state == UP?pdPASS:pdFAIL);
 }
 
 StaticSemaphore_t tx_semaphore_storage;
@@ -253,6 +258,9 @@ SemaphoreHandle_t tx_semaphore;
 NetworkBufferDescriptor_t * const current_buff = NULL;
 BaseType_t current_release_after_send = pdFALSE;
 int tx_cb(struct esp_aio *aio) {
+    wifi_tx_status_t* status = (wifi_tx_status_t*) & (aio->ret);
+    TCPIP_ADAPTER_LOGI(" Returned with result:%d, src:%d, rate:%d, lrc:%d",
+            status->wifi_tx_result,status->wifi_tx_src,status->wifi_tx_rate,status->wifi_tx_lrc);
 #if ipconfigZERO_COPY_TX_DRIVER != 0
     if(aio->arg) {
         vReleaseNetworkBufferAndDescriptor(aio->arg);
@@ -260,7 +268,7 @@ int tx_cb(struct esp_aio *aio) {
 #else
     {
 #endif
-        free((void*)aio->pbuf);
+        free((void*)(aio->pbuf-36));
     }
     xSemaphoreGive(tx_semaphore);
     return 0;
@@ -269,12 +277,16 @@ int tx_cb(struct esp_aio *aio) {
 static BaseType_t NetIFOut(struct xNetworkInterface *net_if,
 	    NetworkBufferDescriptor_t * const buff,
 	    BaseType_t release_after_send) {
-    xSemaphoreTake(tx_semaphore,portMAX_DELAY);            
+    TCPIP_ADAPTER_LOGI("");
+    xSemaphoreTake(tx_semaphore,portMAX_DELAY);   
+    TCPIP_ADAPTER_LOGI("");         
     if (IF_DATA_FROM_IF(net_if)->state == UP) {
+        TCPIP_ADAPTER_LOGI("");
         esp_aio_t async_tx_cmd;
         async_tx_cmd.fd = (wifi_interface_t)IF_NAME_FROM_IF(net_if);
-        async_tx_cmd.cb = tx_cb;
+        async_tx_cmd.cb = &tx_cb;
         async_tx_cmd.len = buff->xDataLength;
+        async_tx_cmd.ret = 0;
 #if ipconfigZERO_COPY_TX_DRIVER != 0
         // Zero copy
         if (release_after_send) {            
@@ -285,12 +297,14 @@ static BaseType_t NetIFOut(struct xNetworkInterface *net_if,
         {
 #endif
             async_tx_cmd.arg = NULL;
-            char * new_buff = malloc(async_tx_cmd.len);
-            memcpy(new_buff,buff->pucEthernetBuffer,async_tx_cmd.len);
-            async_tx_cmd.pbuf = new_buff;
+            char * new_buff = malloc(async_tx_cmd.len + 42);
+            TCPIP_ADAPTER_LOGI("Testing IRAM: %d", IS_IRAM(new_buff));
+            memcpy(new_buff+36,buff->pucEthernetBuffer,async_tx_cmd.len);
+            async_tx_cmd.pbuf = new_buff + 36;
             
         }
-        ieee80211_output_pbuf(&async_tx_cmd);        
+        esp_err_t err = ieee80211_output_pbuf(&async_tx_cmd);
+        TCPIP_ADAPTER_LOGI("Sent packet,got: %d", err);
     } else {
         xSemaphoreGive(tx_semaphore);
         return -1;
@@ -299,15 +313,75 @@ static BaseType_t NetIFOut(struct xNetworkInterface *net_if,
     return 0;
 }
 
+static esp_err_t sta_rx_cb_func(void *buffer, uint16_t len, void *eb) {
+    NetworkInterface_t *net_if = NET_IF(TCPIP_ADAPTER_IF_STA);    
+    NetworkBufferDescriptor_t *pxNetworkBuffer;
+    IPStackEvent_t xRxEvent = { eNetworkRxEvent, NULL };
+    const TickType_t xDescriptorWaitTime = pdMS_TO_TICKS( 250 );
+
+	//prvPrintResourceStats();
+
+	if( eConsiderFrameForProcessing( buffer ) != eProcessBuffer )
+	{
+		ESP_LOGD( TAG, "Dropping packet" );
+		esp_wifi_internal_free_rx_buffer( eb );
+		return ESP_OK;
+	}
+
+	pxNetworkBuffer = pxGetNetworkBufferWithDescriptor( len, xDescriptorWaitTime );
+
+	if( pxNetworkBuffer != NULL )
+	{
+		/* Set the packet size, in case a larger buffer was returned. */
+		pxNetworkBuffer->xDataLength = len;
+
+		/* Copy the packet data. */
+		memcpy( pxNetworkBuffer->pucEthernetBuffer, buffer, len );
+		xRxEvent.pvData = ( void * ) pxNetworkBuffer;
+        pxNetworkBuffer->pxInterface = net_if;
+		if( xSendEventStructToIPTask( &xRxEvent, xDescriptorWaitTime ) == pdFAIL )
+		{
+			ESP_LOGE( TAG, "Failed to enqueue packet to network stack %p, len %d", buffer, len );
+			vReleaseNetworkBufferAndDescriptor( pxNetworkBuffer );
+			return ESP_FAIL;
+		}
+
+		esp_wifi_internal_free_rx_buffer( eb );
+		return ESP_OK;
+	}
+	else
+	{
+		ESP_LOGE( TAG, "Failed to get buffer descriptor" );
+		return ESP_FAIL;
+	}
+    return ESP_OK;
+}
+
+static esp_err_t ap_rx_cb_func(void *buffer, uint16_t len, void *eb) {
+    
+    return 0;
+}
+
+static esp_err_t eth_rx_cb_func(void *buffer, uint16_t len, void *eb) {
+    
+    return 0;
+}
+
+static esp_err_t loopback_rx_cb_func(void *buffer, uint16_t len, void *eb) {
+    
+    return 0;
+}
 
 
 void tcpip_adapter_init(void)
 {
+    TCPIP_ADAPTER_LOGI("");
     if (tcpip_inited == false) {
         tcpip_inited = true;
         // initialize the tx semaphore
         tx_semaphore = xSemaphoreCreateBinaryStatic(&tx_semaphore_storage);        
-        xSemaphoreGive(tx_semaphore);
+        assert(xSemaphoreGive(tx_semaphore));
+
         //tcpip_init(NULL, NULL);        
         memset(_esp_netif, 0, sizeof(_esp_netif));
         memset(_if_data, 0, sizeof(_if_data));
@@ -321,6 +395,7 @@ void tcpip_adapter_init(void)
             _esp_netif[i].pfInitialise = &initialize_network_if;
             _esp_netif[i].pfOutput = &NetIFOut;            
             FreeRTOS_AddNetworkInterface(&(_esp_netif[i]));
+            TCPIP_ADAPTER_LOGI("Adapter: %p, name: %d",&(_esp_netif[i]),IF_NAME_FROM_IF(&(_esp_netif[i])));
         }
         
         // Access point has a static IP address
@@ -328,7 +403,8 @@ void tcpip_adapter_init(void)
         if (_enabled_interfaces[TCPIP_ADAPTER_IF_AP]) {
             _if_data[TCPIP_ADAPTER_IF_AP].ip_info.ip.s_addr = FreeRTOS_inet_addr("192.168.4.1");
             _if_data[TCPIP_ADAPTER_IF_AP].ip_info.gw.s_addr = _if_data[TCPIP_ADAPTER_IF_AP].ip_info.ip.s_addr;
-            _if_data[TCPIP_ADAPTER_IF_AP].ip_info.ip.s_addr = FreeRTOS_inet_addr("255.255.255.0");
+            _if_data[TCPIP_ADAPTER_IF_AP].ip_info.netmask.s_addr = FreeRTOS_inet_addr("255.255.255.0");
+
             FreeRTOS_AddEndPoint(NET_IF(TCPIP_ADAPTER_IF_AP),&(_if_data[TCPIP_ADAPTER_IF_AP].endpoint));
         }
             
@@ -344,6 +420,8 @@ void tcpip_adapter_init(void)
         if (_enabled_interfaces[TCPIP_ADAPTER_IF_STA]) {
             memset(&(_if_data[TCPIP_ADAPTER_IF_STA].ip_info),0,sizeof(tcpip_adapter_ip6_info_t));
             _if_data[TCPIP_ADAPTER_IF_STA].endpoint.bits.bWantDHCP = true;
+            _if_data[TCPIP_ADAPTER_IF_STA].endpoint.ulBroadcastAddress = ipBROADCAST_IP_ADDRESS;
+            esp_wifi_internal_reg_rxcb((wifi_interface_t)TCPIP_ADAPTER_IF_STA, sta_rx_cb_func);
             FreeRTOS_AddEndPoint(NET_IF(TCPIP_ADAPTER_IF_STA),&(_if_data[TCPIP_ADAPTER_IF_STA].endpoint));
         }
 
@@ -353,6 +431,7 @@ void tcpip_adapter_init(void)
             _if_data[TCPIP_ADAPTER_IF_ETH].endpoint.bits.bWantDHCP = true;
             FreeRTOS_AddEndPoint(NET_IF(TCPIP_ADAPTER_IF_ETH),&(_if_data[TCPIP_ADAPTER_IF_ETH].endpoint));
         }        
+        
         // Finally - start the whole thing
         FreeRTOS_IPStart();
     }
@@ -360,6 +439,7 @@ void tcpip_adapter_init(void)
 
 esp_err_t tcpip_adapter_start(tcpip_adapter_if_t tcpip_if, uint8_t *mac, tcpip_adapter_ip_info_t *ip_info)
 {
+    TCPIP_ADAPTER_LOGI("");
     esp_err_t ret = -1;
     if (tcpip_if >= TCPIP_ADAPTER_IF_MAX || mac == NULL || ip_info == NULL) {
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
@@ -385,12 +465,11 @@ esp_err_t tcpip_adapter_start(tcpip_adapter_if_t tcpip_if, uint8_t *mac, tcpip_a
 
 esp_err_t tcpip_adapter_stop(tcpip_adapter_if_t tcpip_if)
 {
+    TCPIP_ADAPTER_LOGI("");
     if (tcpip_if >= TCPIP_ADAPTER_IF_MAX) {
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     }
-
-    // first stop sending new eth packets to this interface
-    esp_wifi_internal_reg_rxcb((wifi_interface_t)tcpip_if, NULL);
+    
     // mark the interface as down
     IF_DATA(tcpip_if)->state = DOWN;
     // notify the tcp stack
@@ -407,6 +486,7 @@ esp_err_t tcpip_adapter_stop(tcpip_adapter_if_t tcpip_if)
 
 esp_err_t tcpip_adapter_up(tcpip_adapter_if_t tcpip_if)
 {
+    TCPIP_ADAPTER_LOGI("");
     IF_DATA(tcpip_if)->state = UP;
     return ESP_OK;
 }
@@ -419,39 +499,16 @@ esp_err_t tcpip_adapter_up(tcpip_adapter_if_t tcpip_if)
 //     return ESP_OK;
 // }
 
-// esp_err_t tcpip_adapter_down(tcpip_adapter_if_t tcpip_if)
-// {
-//     if (tcpip_if == TCPIP_ADAPTER_IF_STA) {
-//         if (esp_netif[tcpip_if] == NULL) {
-//             return ESP_ERR_TCPIP_ADAPTER_IF_NOT_READY;
-//         }
-
-//         if (dhcpc_status[tcpip_if] == TCPIP_ADAPTER_DHCP_STARTED) {
-//             tcpip_adapter_stop_dhcp(esp_netif[tcpip_if]);
-
-//             dhcpc_status[tcpip_if] = TCPIP_ADAPTER_DHCP_INIT;
-
-//             tcpip_adapter_reset_ip_info(tcpip_if);
-//         }
-
-// #if TCPIP_ADAPTER_IPV6
-//         for(int8_t i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++) {
-//             netif_ip6_addr_set(esp_netif[tcpip_if], i, IP6_ADDR_ANY6);
-//             netif_ip6_addr_set_state(esp_netif[tcpip_if], i, IP6_ADDR_INVALID);
-//         }
-// #endif
-//         netif_set_addr(esp_netif[tcpip_if], IP4_ADDR_ANY4, IP4_ADDR_ANY4, IP4_ADDR_ANY4);
-//         netif_set_down(esp_netif[tcpip_if]);
-//         tcpip_adapter_start_ip_lost_timer(tcpip_if);
-//     }
-
-//     tcpip_adapter_update_default_netif();
-
-//     return ESP_OK;
-// }
+esp_err_t tcpip_adapter_down(tcpip_adapter_if_t tcpip_if)
+{
+    TCPIP_ADAPTER_LOGI("");
+    FreeRTOS_NetworkDown(NET_IF(tcpip_if));
+    return ESP_OK;
+}
 
 esp_err_t tcpip_adapter_set_old_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_ip_info_t *ip_info)
 {
+    TCPIP_ADAPTER_LOGI("");
     if (tcpip_if >= TCPIP_ADAPTER_IF_MAX || ip_info == NULL) {
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     }
@@ -463,6 +520,7 @@ esp_err_t tcpip_adapter_set_old_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapt
 
 esp_err_t tcpip_adapter_get_old_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_ip_info_t *ip_info)
 {
+    TCPIP_ADAPTER_LOGI("");
     if (tcpip_if >= TCPIP_ADAPTER_IF_MAX || ip_info == NULL) {
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     }
@@ -474,6 +532,7 @@ esp_err_t tcpip_adapter_get_old_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapt
 
 esp_err_t tcpip_adapter_get_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_ip_info_t *ip_info)
 {
+    TCPIP_ADAPTER_LOGI("");
     if (tcpip_if >= TCPIP_ADAPTER_IF_MAX || ip_info == NULL) {
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     }
@@ -502,6 +561,7 @@ esp_err_t tcpip_adapter_get_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_i
 
 esp_err_t tcpip_adapter_set_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_ip_info_t *ip_info)
 {    
+    TCPIP_ADAPTER_LOGI("");
     // if (tcpip_if >= TCPIP_ADAPTER_IF_MAX || ip_info == NULL) {
     //     return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     // }
@@ -653,6 +713,7 @@ esp_err_t tcpip_adapter_set_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_i
 
 esp_err_t tcpip_adapter_dhcps_option(tcpip_adapter_option_mode_t opt_op, tcpip_adapter_option_id_t opt_id, void *opt_val, uint32_t opt_len)
 {
+    TCPIP_ADAPTER_LOGI("");
 //     void *opt_info = dhcps_option_info(opt_id, opt_len);
 
 //     if (opt_info == NULL || opt_val == NULL) {
@@ -775,6 +836,7 @@ esp_err_t tcpip_adapter_dhcps_option(tcpip_adapter_option_mode_t opt_op, tcpip_a
 
 esp_err_t tcpip_adapter_set_dns_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_dns_type_t type, tcpip_adapter_dns_info_t *dns)
 {
+    TCPIP_ADAPTER_LOGI("");
     // if (tcpip_if >= TCPIP_ADAPTER_IF_MAX) {
     //     ESP_LOGD(TAG, "set dns invalid if=%d", tcpip_if);
     //     return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
@@ -814,6 +876,7 @@ esp_err_t tcpip_adapter_set_dns_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_
 
 esp_err_t tcpip_adapter_get_dns_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_dns_type_t type, tcpip_adapter_dns_info_t *dns)
 { 
+    TCPIP_ADAPTER_LOGI("");
     // const ip_addr_t *ns;
 
     // if (!dns) {
@@ -843,6 +906,7 @@ esp_err_t tcpip_adapter_get_dns_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_
 
 esp_err_t tcpip_adapter_dhcps_get_status(tcpip_adapter_if_t tcpip_if, tcpip_adapter_dhcp_status_t *status)
 {
+    TCPIP_ADAPTER_LOGI("");
     //*status = dhcps_status;
 
     return ESP_OK;
@@ -850,6 +914,7 @@ esp_err_t tcpip_adapter_dhcps_get_status(tcpip_adapter_if_t tcpip_if, tcpip_adap
 
 esp_err_t tcpip_adapter_dhcps_start(tcpip_adapter_if_t tcpip_if)
 {
+    TCPIP_ADAPTER_LOGI("");
 //     /* only support ap now */
 //     if (tcpip_if != TCPIP_ADAPTER_IF_AP || tcpip_if >= TCPIP_ADAPTER_IF_MAX) {
 //         ESP_LOGD(TAG, "dhcp server invalid if=%d", tcpip_if);
@@ -880,6 +945,7 @@ esp_err_t tcpip_adapter_dhcps_start(tcpip_adapter_if_t tcpip_if)
 
 esp_err_t tcpip_adapter_dhcps_stop(tcpip_adapter_if_t tcpip_if)
 {
+    TCPIP_ADAPTER_LOGI("");
 //     /* only support ap now */
 //     if (tcpip_if != TCPIP_ADAPTER_IF_AP || tcpip_if >= TCPIP_ADAPTER_IF_MAX) {
 //         ESP_LOGD(TAG, "dhcp server invalid if=%d", tcpip_if);
@@ -907,6 +973,7 @@ esp_err_t tcpip_adapter_dhcps_stop(tcpip_adapter_if_t tcpip_if)
 
 esp_err_t tcpip_adapter_dhcpc_option(tcpip_adapter_option_mode_t opt_op, tcpip_adapter_option_id_t opt_id, void *opt_val, uint32_t opt_len)
 {
+    TCPIP_ADAPTER_LOGI("");
 //     // TODO: when dhcp request timeout,change the retry count
     return ESP_ERR_NOT_SUPPORTED;
 }
@@ -1031,13 +1098,15 @@ esp_err_t tcpip_adapter_dhcpc_option(tcpip_adapter_option_mode_t opt_op, tcpip_a
 
 esp_err_t tcpip_adapter_dhcpc_get_status(tcpip_adapter_if_t tcpip_if, tcpip_adapter_dhcp_status_t *status)
 {
+    TCPIP_ADAPTER_LOGI("");
 //     *status = dhcpc_status[tcpip_if];
-
+    *status = TCPIP_ADAPTER_DHCP_INIT;
     return ESP_OK;
 }
 
 esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
 {
+    TCPIP_ADAPTER_LOGI("");
 //     if ((tcpip_if != TCPIP_ADAPTER_IF_STA)  || tcpip_if >= TCPIP_ADAPTER_IF_MAX) {
 //         ESP_LOGD(TAG, "dhcp client invalid if=%d", tcpip_if);
 //         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
@@ -1088,6 +1157,7 @@ esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
 
 esp_err_t tcpip_adapter_dhcpc_stop(tcpip_adapter_if_t tcpip_if)
 {
+    TCPIP_ADAPTER_LOGI("");
 //     if (tcpip_if != TCPIP_ADAPTER_IF_STA || tcpip_if >= TCPIP_ADAPTER_IF_MAX) {
 //         ESP_LOGD(TAG, "dhcp client invalid if=%d", tcpip_if);
 //         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
@@ -1117,12 +1187,14 @@ esp_err_t tcpip_adapter_dhcpc_stop(tcpip_adapter_if_t tcpip_if)
 
 esp_interface_t tcpip_adapter_get_esp_if(void *dev)
 {
+    TCPIP_ADAPTER_LOGI("");
     NetworkInterface_t* net_if = (NetworkInterface_t *)dev;
     return (esp_interface_t)IF_NAME_FROM_IF(net_if);   
 }
 
 esp_err_t tcpip_adapter_get_sta_list(wifi_sta_list_t *wifi_sta_list, tcpip_adapter_sta_list_t *tcpip_sta_list)
 {
+    TCPIP_ADAPTER_LOGI("");
 //     int i;
 
 //     if ((wifi_sta_list == NULL) || (tcpip_sta_list == NULL)) {
@@ -1141,6 +1213,7 @@ esp_err_t tcpip_adapter_get_sta_list(wifi_sta_list_t *wifi_sta_list, tcpip_adapt
 
 esp_err_t tcpip_adapter_set_hostname(tcpip_adapter_if_t tcpip_if, const char *hostname)
 {
+    TCPIP_ADAPTER_LOGI("");
 // #if LWIP_NETIF_HOSTNAME
 //     struct netif *p_netif;
 //     static char hostinfo[TCPIP_ADAPTER_IF_MAX][TCPIP_HOSTNAME_MAX_SIZE + 1];
@@ -1170,6 +1243,7 @@ esp_err_t tcpip_adapter_set_hostname(tcpip_adapter_if_t tcpip_if, const char *ho
 
 esp_err_t tcpip_adapter_get_hostname(tcpip_adapter_if_t tcpip_if, const char **hostname)
 {
+TCPIP_ADAPTER_LOGI("");
 // #if LWIP_NETIF_HOSTNAME
 //     struct netif *p_netif = NULL;
 //     if (tcpip_if >= TCPIP_ADAPTER_IF_MAX || hostname == NULL) {
@@ -1191,6 +1265,7 @@ esp_err_t tcpip_adapter_get_hostname(tcpip_adapter_if_t tcpip_if, const char **h
 
 esp_err_t tcpip_adapter_get_netif(tcpip_adapter_if_t tcpip_if, void ** netif)
 {
+    TCPIP_ADAPTER_LOGI("");
     if (tcpip_if >= TCPIP_ADAPTER_IF_MAX) {
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     }
@@ -1205,6 +1280,7 @@ esp_err_t tcpip_adapter_get_netif(tcpip_adapter_if_t tcpip_if, void ** netif)
 
 bool tcpip_adapter_is_netif_up(tcpip_adapter_if_t tcpip_if)
 {
+    TCPIP_ADAPTER_LOGI("");
 //     if (esp_netif[tcpip_if] != NULL && netif_is_up(esp_netif[tcpip_if])) {
 //         return true;
 //     } else {
@@ -1215,6 +1291,7 @@ bool tcpip_adapter_is_netif_up(tcpip_adapter_if_t tcpip_if)
 
 int tcpip_adapter_get_netif_index(tcpip_adapter_if_t tcpip_if)
 {
+    TCPIP_ADAPTER_LOGI("");
 //     if (tcpip_if >= TCPIP_ADAPTER_IF_MAX || esp_netif[tcpip_if] == NULL) {
 //         return -1;
 //     }
