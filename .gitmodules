@@ -21,3 +21,6 @@
 [submodule "components/freertos_tcp/FreeRTOS-Plus-TCP"]
 	path = components/freertos_tcp/FreeRTOS-Plus-TCP
 	url = https://github.com/eliransin/FreeRTOS-Plus-TCP.git
+[submodule "components/cpp-httplib"]
+	path = components/cpp-httplib
+	url = https://github.com/eliransin/cpp-httplib.git
